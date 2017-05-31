@@ -74,7 +74,7 @@ func (w *statusWriter) Write(b []byte) (int, error) {
 
 func WriteLog(r *httprouter.Router) http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {
-		if logruserSystem ==nil{
+		if logruserSystem == nil {
 			instantiation(r.Path)
 		}
 		start := time.Now()
@@ -102,9 +102,11 @@ func WriteLog(r *httprouter.Router) http.HandlerFunc {
 }
 
 func Info(ps Params, message string) {
-	logruserSystem.WithFields(logrus.Fields{
-		"params": ps,
-	}).Info(message)
+	go func() {
+		logruserSystem.WithFields(logrus.Fields{
+			"params": ps,
+		}).Info(message)
+	}()
 }
 
 func Warn(ps Params, message string) {
