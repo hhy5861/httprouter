@@ -52,6 +52,7 @@ func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 func main() {
     router := httprouter.New()
+    router.Debug = true
     router.GET("/", Index)
     router.GET("/hello/:name", Hello)
 

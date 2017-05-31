@@ -78,9 +78,6 @@ package httprouter
 
 import (
 	"net/http"
-	"time"
-
-	"github.com/Sirupsen/logrus"
 )
 
 // Handle is a function that can be registered to a route to handle HTTP
@@ -163,9 +160,11 @@ type Router struct {
 	// unrecovered panics.
 	PanicHandler func(http.ResponseWriter, *http.Request, interface{})
 
-	RequestTime time.Time
+	// logs swich
+	Debug bool
 
-	status int64
+	//logs path
+	Path string
 }
 
 // Make sure the Router conforms with the http.Handler interface
@@ -283,27 +282,8 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 }
 
 func (r *Router) recv(w http.ResponseWriter, req *http.Request) {
-	rcv := recover();
-	if rcv != nil {
+	if rcv := recover(); rcv != nil {
 		r.PanicHandler(w, req, rcv)
-	}
-
-	if Debug {
-		go func(w http.ResponseWriter, req *http.Request) {
-			endTime := time.Now().Sub(r.RequestTime)
-			params := make(map[string]interface{})
-
-			params["method"] = req.Method
-			params["path"] = req.URL
-			params["time"] = endTime
-			params["ip"] = req.RemoteAddr
-			params["user_agent"] = req.UserAgent()
-
-			LogruserSystem.WithFields(logrus.Fields{
-				"error":  rcv,
-				"params": params,
-			}).Fatal("System log module open file errer")
-		}(w, req)
 	}
 }
 
@@ -359,7 +339,6 @@ func (r *Router) allowed(path, reqMethod string) (allow string) {
 
 // ServeHTTP makes the router implement the http.Handler interface.
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	r.RequestTime = time.Now();
 	if r.PanicHandler != nil {
 		defer r.recv(w, req)
 	}
